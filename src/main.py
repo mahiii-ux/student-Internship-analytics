@@ -1,6 +1,8 @@
 import pandas as pd
 from dateutil import parser
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine, MetaData, Table ,text
+from urllib.parse import quote_plus
+
 
 df = pd.read_excel("C:\\Users\\Mahi Thakur\\OneDrive\\Documents\\Wide_softech_Data_For_Dashboard\\Cleaned_Data.xlsx")
 print(df.head())
@@ -62,16 +64,28 @@ print(college_count)
 
 # Database connection
 # Database login details (NO SPACES inside the quotes!)
-username = "root"
-password = "tmahi0151"
-host = "localhost"  # Database is on our computer
-port = "3306"  # MySQL's default port
-database = "mydb"  # Our database name
 
-# Create connection (NO SPACES in the f-string!)
+username = "root"
+password = quote_plus("mahi@7722")
+host = "localhost"
+port = "3306"
+database = "mydb"
+
 engine = create_engine(
-    f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}"
-)
+    f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}",
+    future=True)
 
 print("\nDatabase connection successful!")
 
+
+# Force drop table safely
+with engine.connect() as conn:
+    conn.execute(text("DROP TABLE IF EXISTS Intern_Data"))
+    conn.commit()
+
+# Insert data
+df.to_sql("Intern_Data", engine, if_exists="replace", index=False)
+
+# Verify
+df2 = pd.read_sql("SELECT * FROM Intern_Data LIMIT 5;", engine)
+print(df2)
